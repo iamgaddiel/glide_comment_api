@@ -33,7 +33,8 @@ SECRET_KEY = env.get('APP_SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'localhost'
+    'localhost',
+    'glide.pythonanywhere.com'
 ]
 
 
