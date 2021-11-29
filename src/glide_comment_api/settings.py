@@ -138,7 +138,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATIC_COLLECTION = os.path.join(BASE_DIR, 'static_collections')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static_collections')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
