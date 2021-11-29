@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<body>
+  <style>
+    * {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+        Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+    #commentForm {
+      width: 95vw;
+      margin: auto;
+    }
+    #commentForm input[type="text"] {
+      margin: 10px 0px;
+    }
+    #commentForm input[type="text"],
+    #commentForm textarea {
+      width: 100%;
+      max-height: 150px;
+      padding: 10px;
+      font-size: 20px;
+    }
+    #commentForm input[type="text"]::placeholder,
+    #commentForm textarea::placeholder {
+      font-size: 20px;
+    }
+    #commentForm input[type="submit"] {
+      border: none;
+      background-color: #353535;
+      border-radius: 6px;
+      padding: 10px;
+      width: 150px;
+      margin-top: 30px;
+      color: #fff;
+      text-transform: capitalize;
+      font-size: 15px;
+    }
+    #form-legends {
+      color: #333;
+      font-size: 30px;
+      font-weight: 900;
+    }
+    .comment {
+      border-left: 10px #bbb solid;
+      padding: 10px;
+      font-size: 1rem;
+      margin-top: 10px;
+    }
+    .comment > div {
+      display: flex;
+      justify-content: space-between;
+    }
+    .comment #title {
+      margin: 0;
+      padding: 0;
+      font-weight: 600;
+      font-size: 1.5rem;
+    }
+    .comment .likeBtn {
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-decoration: none;
+      margin-top: 10px;
+      color: #4f4ff2;
+    }
+    .comment .likeBtn:hover {
+      cursor: pointer;
+    }
+  </style>
+  <form action="" method="post" id="commentForm">
+    <legend id="form-legends">Comments</legend>
+    <div>
+      <input type="text" name="name" id="" placeholder="Name" />
+    </div>
+    <div>
+      <textarea
+        name="comment"
+        cols="30"
+        rows="10"
+        spellcheck="true"
+        placeholder="Enter your comment here"
+        id="comment"
+      ></textarea>
+    </div>
+    <div>
+      <input type="submit" value="Comment" id="submitButton" />
+    </div>
+  </form>
+  <section id="comments"></section>
+
+  <!-- scripts -->
+  <script src="https://use.fontawesome.com/4ebebce28d.js"></script>
+  <script>
+    let debug = true;
+    let endPoint, blogUrl;
+
+    if (debug) {
+      endPoint = "http://localhost:8000/api/v1/comments/";
+      blogBaseUrl = "http://localhost:8000/api/v1/comment/like/";
+    } else {
+      endPoint = "https://www.glide.pythonanywhere.com/api/v1/comments/";
+      blogBaseUrl = "https://www.glide.pythonanywhere.com/api/v1/comment/like/";
+    }
+
+    // // Sessions_____________
+    if (!sessionStorage.getItem('userId')){
+      sessionStorage.setItem('userId', getRandomString(32))
+    }
+
+    // Events_____________
+    document
+      .querySelector("#commentForm")
+      .addEventListener("submit", createComment);
+
+    window.addEventListener("load", getComments);
+
+    function getBlog() {
+      return location.pathname.split("/").pop();
+    }
+
+    function getRandomString(stringLength){
+      let randomString = "";
+      let count = 0;
+      let string = "abcdefghijklmnopqrstuvwxyz1234567890!@#₦%^&*()_+=-".split('')
+      while (count < stringLength){
+        randomString += string[Math.floor(Math.random() * string.length)]
+        count++;
+      }
+      return randomString;
+    }
+
+    async function createComment(e) {
+      e.preventDefault();
+      let formInputs = e.target;
+      let formData = { blog: getBlog() };
+
+      for (let input of formInputs) {
+        formData[input.name] = input.value;
+      }
+
+      try {
+        await fetchRequest(endPoint, "POST", formData);
+      } catch (err) {
+        console.error("Problem submitting file", err);
+      }
+    }
+
+    async function likeComment(comment) {
+      const postData = { 
+        comment, 
+        'userId': sessionStorage.getItem('userId') 
+      };
+      let likedCommentUrl = `${blogBaseUrl}${comment}/`;
+
+      try {
+        let response = await (await fetchRequest(likedCommentUrl, "POST", postData)).json();
+        if (response.liker[0]){
+          alert("You've already liked this comment")
+        }
+      } catch (err) {
+        console.log("Error liking this comment", err);
+      }
+    }
+
+    async function fetchRequest(url, method, data) {
+      console.log(url, method, data);
+      try {
+        if (method == "POST") {
+          response = fetch(url, {
+            method: method,
+            body: JSON.stringify(data),
+            headers: { "Content-Type": "application/json" },
+          });
+        } else if (method == "GET") {
+          let response = (await fetch(url)).json();
+        }
+        return response;
+      } catch (err) {
+        console.log("problem sending request", err);
+      }
+    }
+
+    async function getComments() {
+      try {
+        endPoint = `${endPoint}?blog=${getBlog()}`;
+        fetch(endPoint)
+          .then((res) => res.json())
+          .then((res) => {
+            res.forEach((data) => {
+              document.querySelector("#comments").innerHTML += `
+                <div class="comment">
+                  <div>
+                    <div>
+                      <span id="title">${data.name}</span> ${new Date(
+                data.timestamp
+              ).toDateString()}
+                    </div>
+                    <span>
+                      <span id="likeCount">${data.likes}</span>
+                      <i class="fa fa-thumbs-o-up" aria-hidden="true"></i>
+                    </span>
+                  </div>
+                  <span>${data.comment}</span>
+                  <div>
+                    <span onclick="likeComment('${
+                      data.id
+                    }')" class="likeBtn">Like</span>
+                  </div>
+                </div>
+                `;
+            });
+          })
+          .catch((err) => console.log(err));
+      } catch (error) {
+        console.err('unable to get comments ', error)
+      }
+    }
+  </script>
+</body>
