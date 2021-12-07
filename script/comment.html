@@ -138,7 +138,11 @@
 
       try {
         await fetchRequest(endPoint, "POST", formData);
-        getComments();
+        location.reload();
+        // reset form fields to empty
+        for (let input of formInputs) {
+        input.value = "";
+      }
       } catch (err) {
         console.error("Problem submitting file", err);
       }
