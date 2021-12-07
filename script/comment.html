@@ -97,8 +97,8 @@
       endPoint = "http://localhost:8000/api/v1/comments/";
       blogBaseUrl = "http://localhost:8000/api/v1/comment/like/";
     } else {
-      endPoint = "https://www.glide.pythonanywhere.com/api/v1/comments/";
-      blogBaseUrl = "https://www.glide.pythonanywhere.com/api/v1/comment/like/";
+      endPoint = "https://glide.pythonanywhere.com/api/v1/comments/";
+      blogBaseUrl = "https://glide.pythonanywhere.com//api/v1/comment/like/";
     }
 
     // // Sessions_____________
@@ -111,7 +111,6 @@
       .querySelector("#commentForm")
       .addEventListener("submit", createComment);
 
-    window.addEventListener("load", getComments);
 
     function getBlog() {
       return location.pathname.split("/").pop();
@@ -139,6 +138,7 @@
 
       try {
         await fetchRequest(endPoint, "POST", formData);
+        getComments();
       } catch (err) {
         console.error("Problem submitting file", err);
       }
@@ -153,9 +153,7 @@
 
       try {
         let response = await (await fetchRequest(likedCommentUrl, "POST", postData)).json();
-        if (response.liker[0]){
-          alert("You've already liked this comment")
-        }
+        location.reload()
       } catch (err) {
         console.log("Error liking this comment", err);
       }
@@ -179,7 +177,7 @@
       }
     }
 
-    async function getComments() {
+    (async function getComments() {
       try {
         endPoint = `${endPoint}?blog=${getBlog()}`;
         fetch(endPoint)
@@ -213,6 +211,6 @@
       } catch (error) {
         console.err('unable to get comments ', error)
       }
-    }
+    })();
   </script>
 </body>
